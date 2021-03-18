@@ -1,0 +1,7 @@
+env/**
+.vscode/**
+output/**
+*.pyc
+.DS_Store
+scripts/__pycache__/**
+analysis/**
