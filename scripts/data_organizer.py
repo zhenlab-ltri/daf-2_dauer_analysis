@@ -16,13 +16,12 @@ def input_dauer_json_converter(file,name):
     dauer_original = open_json(file)
     dauer_connections = {}
     dauer_connections[name] = {}
-
     #Converting the daf2 json to the same format as the nondauers
     for i, con in enumerate(dauer_original):
 
         key = str(get_neuron_pair_key(dauer_original[i]['partners'][0], dauer_original[i]['partners'][1]))
 
-        if key not in dauer_connections.keys():
+        if key not in dauer_connections[name].keys():
             dauer_connections[name][key] = 1
         
         else:
