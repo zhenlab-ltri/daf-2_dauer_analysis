@@ -34,6 +34,7 @@ def plotter3d(file,name, outpath):
         marker=dict(
             sizemode='diameter',
             size=4,
+            color = df['Class']
     
         )
 
@@ -43,8 +44,8 @@ def plotter3d(file,name, outpath):
                     height=1000, width=1000,
                     title=name,
                     scene = dict(xaxis=dict(title='Effect Size (x)'),
-                                yaxis=dict(title='In how many N2 dauers (y)'),
-                                zaxis=dict(title='P-value (z)'),
+                                yaxis=dict(title='In how many N2 dauers (y)', tickvals = [0,1,2]),
+                                zaxis=dict(title='P-value (z)', tickvals = [0,0.001,0.01,0.1,1]),
                                 
                             ))
 

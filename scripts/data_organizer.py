@@ -1,8 +1,10 @@
 import json
+import csv
 import copy
 
 from util import open_json
-from neuron_info import ntype, nclass
+from neuron_info import ntype, nclass, npair
+
 
 def get_neuron_pair_key (pre, post):
     return (pre, post)
@@ -90,8 +92,8 @@ def get_class_connections(data):
             connection_temp2 = connection_temp1.replace("'", "")
             connection_list = connection_temp2.split(', ')
             
-            pre = nclass(connection_list[0])
-            post = nclass(connection_list[1])
+            pre = connection_list[0]
+            post = connection_list[1]
 
             key = pre + '$' + post
 
@@ -109,7 +111,7 @@ def get_class_connections(data):
     #Help check numbers with nemanode to make sure it's currectly added
     #print(class_connections['L1_1']['SAA$AVA'], class_connections['L1_2']['SAA$AVA'], class_connections['L1_3']['SAA$AVA'], class_connections['L2']['SAA$AVA'])
 
-    output_path = 'daf2-dauer-comparisons\output\class-connections.json'
+    output_path = 'daf2-dauer-comparisons\output\connections.json'
 
     with open(output_path, 'w') as f:
         json.dump(class_connections, f, indent= 2)
@@ -248,6 +250,7 @@ def get_class_connection_output_percentages(output_json,connections_list,dataset
 
 if __name__ == '__main__':
 
+
     nondauers = 'daf2-dauer-comparisons\\input\\nondauer_connections.json'
     daf2_dauer = 'daf2-dauer-comparisons\input\daf2-dauer.json'
     stig2 = 'daf2-dauer-comparisons\input\stigloher2.json'
@@ -257,7 +260,7 @@ if __name__ == '__main__':
     comparison_dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'daf2-dauer']
 
 
-    nondauer_renamed = rename_nondauers(nondauers)
+    nondauer_renamed = rename_nondauers(nondauers.strip())
     daf2_formatted = input_dauer_json_converter(daf2_dauer, 'daf2-dauer')
     stig2_formatted = input_dauer_json_converter(stig2, 'stigloher2')
     stig3_formatted = input_dauer_json_converter(stig3, 'stigloher3')
