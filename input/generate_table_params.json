@@ -1,0 +1,32 @@
+[
+    {
+        "connection_type": "neuron_pair",
+        "compare_contactome_with": "all_nondauers",
+        "normalize_by": "input_output",
+        "synapse_type": "count",
+        "nondauers": "./input/nondauer_synapse_count.json",
+        "zero_filter": 10,
+        "pvalue_cutoff": 0.05,
+        "fdr_correction": false
+    },
+    {
+        "connection_type": "neuron_pair",
+        "compare_contactome_with": "all_nondauers",
+        "normalize_by": "entire_dataset",
+        "synapse_type": "count",
+        "nondauers": "./input/nondauer_synapse_count.json",
+        "zero_filter": 10,
+        "pvalue_cutoff": 0.05,
+        "fdr_correction": false
+    },
+    {
+        "connection_type": "neuron_pair",
+        "compare_contactome_with": "all_nondauers",
+        "normalize_by": "input_output",
+        "synapse_type": "count",
+        "nondauers": "./input/nondauer_synapse_count.json",
+        "zero_filter": 10,
+        "pvalue_cutoff": 0.05,
+        "fdr_correction": false
+    }
+]
