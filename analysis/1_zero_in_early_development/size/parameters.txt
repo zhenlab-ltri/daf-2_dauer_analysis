@@ -1,0 +1,5 @@
+connection: neuron_pair
+compared contactome with: all_nondauers
+synapse type: size
+zero filter: early_development
+pvalue cutoff: 0.05
