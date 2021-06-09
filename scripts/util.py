@@ -2,9 +2,18 @@ import json
 import csv
 import re
 import os
+import time
+import numpy as np
+import pandas as pd
+from functools import reduce
+from statsmodels.sandbox.stats.multicomp import fdrcorrection0
 
-def get_job_dir(project_name):
-    d = f'./output/{project_name}/'
+def get_job_id():
+    today = time.strftime('%Y%m%d%H%M')
+    return str(today)
+
+def get_job_dir():
+    d = f'./output/{get_job_id()}/'
 
     os.mkdir(d)
     return d
@@ -20,55 +29,60 @@ def write_json(fpath, data):
     with open(fpath, 'w') as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-def npair(n):
-    if n in (
-        'AVG', 'DVC', 'PVR', 'PVT', 'RIH', 'RIR', 'DVA', 'AQR', 'AVM', 'PQR', 
-        'PVM', 'DVB', 'PDA', 'PDB', 'ALA', 'AVL', 'RID', 'RIS', 
-        'I3', 'I4', 'I5', 'I5', 'M1', 'M4', 'M5', 'MI'
-    ): 
-        return n
-    if len(n) == 4 and n[-1] in 'LR' and n[:3] in (
-        'ADA', 'ADE', 'ADF', 'ADL', 'AFD', 'AIA', 'AIB', 'AIM', 'AIN', 'AIY',
-        'AIZ', 'ALM', 'ALN', 'ASE', 'ASG', 'ASH', 'ASI', 'ASJ', 'ASK', 'AUA', 
-        'AVA', 'AVB', 'AVD', 'AVE', 'AVF', 'AVH', 'AVJ', 'AVK', 'AWA', 'AWB',
-        'AWC', 'BAG', 'BDU', 'CAN', 'FLP',  'HSN'
-        , 'LUA',
-        'OLL', 'PDE', 'PHA', 'PHB', 'PHC', 'PLM', 'PLN', 'PVC', 'PVD', 'PVN', 
-        'PVP', 'PVQ', 'PVW', 'RIA', 'RIB', 'RIC', 'RIF', 'RIG', 'RIM', 'RIP', 
-        'RIV', 'RMF', 'RMG', 'RMH', 'SDQ', 'URB', 'URX'
-    ):
-        return n[:3]
-    if len(n) == 4 and n[-1] in 'LR' and n[:3] in (
-        'IL1', 'IL2', 'RME', 'RMD','GLR',
-    ):
-        return n[:3] + 'L/R'
-    if len(n) == 4 and n[-1] in 'DV' and n[:3] in (
-        'IL1', 'IL2', 'RME', 'RMD'
-    ):
-        return n[:3] + 'D/V'
-    if len(n) == 5 and n[-2:] in ('DL', 'DR', 'VL', 'VR') and n[:3] in (
-        'CEP', 'GLR', 'IL1', 'IL2', 'OLQ', 'RMD', 'SAA', 'SIA', 'SIB', 'SMB',
-        'SMD', 'URA', 'URY'
-    ):
-        return n[:4]
-    if len(n) == 8 and re.match('BWM-[DV][LR]0[0-8]', n):
-        return 'BWM' + n[-2:] + n[4]
-    if n in (
-         'SABD', 'SABVL', 'SABVR',
-    ):
-        return n[:4]
-    if n in (
-        'CEPshDL', 'CEPshDR', 'CEPshVL', 'CEPshVR'
-    ):
-        return n[:6]
-    if n[:2] in ('AS', 'VB', 'VA', 'VD') and n[2:] in map(str, range(12)):
-        return n[:2] + 'n'
-    if n in ('VA12', 'VD12', 'VD13'):
-        return n[:2] + 'n'
-    if re.match('^(DA[1-9])|(DB[1-7])|(DD[1-6])|(VC[1-6])$', n):
-        return n[:2] + 'n'
-    return n
+def tuple_key (pre, post):
+    return (pre, post)
 
+def merge(dict1, dict2, dict3, dict4):
+    new = {**dict1, **dict2, **dict3, **dict4}
+    return new
 
+def get_key(pre, post):
+    return pre + '$' + post
 
+def remove_space(string):
+    return string.replace(' ', '')
 
+def comma_string_to_list(string):
+    return np.array(string.split(','))
+
+def make_connection_key(data):
+    df = pd.read_csv(data)
+    connection = df['Pre'].str.cat(df['Post'], sep = '$')
+    df.insert(0, 'connection', connection)
+
+    return df
+
+def merge2(d1, d2, connections, name1, name2):
+    dataset_only_1 = d1[d1['connection'].isin(connections)]
+    dataset_only_2 = d2[d2['connection'].isin(connections)]
+    df_dataset_only_1 = dataset_only_1.drop(['classification', 'nondauer contact'], axis = 1)
+    df_dataset_only_2 = dataset_only_2.drop (['Pre Class', 'Post Class', 'Pre', 'Post' ], axis = 1)
+    dfs = [df_dataset_only_1, df_dataset_only_2]
+    df_dataset_only = reduce(lambda left, right: pd.merge(left, right,  on = 'connection', suffixes = (f'_{name1}', f'_{name2}')), dfs)
+
+    return df_dataset_only
+
+def merge3 (d1, d2, d3, connections, name1, name2):
+    dataset_only_1 = d1[d1['connection'].isin(connections)]
+    dataset_only_2 = d2[d2['connection'].isin(connections)]
+    dataset_only_3 = d3[d3['connection'].isin(connections)]
+    df_dataset_only_1 = dataset_only_1.drop(['classification', 'nondauer contact'], axis = 1)
+    df_dataset_only_2 = dataset_only_2.drop(['Pre Class', 'Post Class', 'Pre', 'Post', 'classification', 'nondauer contact'], axis = 1)
+    df_dataset_only_3 = dataset_only_3.drop (['Pre Class', 'Post Class', 'Pre', 'Post' ], axis = 1)
+    dfs = [df_dataset_only_1, df_dataset_only_2, df_dataset_only_3]
+    df_dataset_only = reduce(lambda left, right: pd.merge(left, right,  on = 'connection', suffixes = (f'_{name1}', f'_{name2}')), dfs)
+
+    return df_dataset_only
+
+def fdr_correction(pvalues):
+
+    mask = np.isfinite(pvalues)
+    corrected_pvalues = np.empty(pvalues.shape)
+    corrected_pvalues.fill(np.nan) 
+    corrected_pvalues[mask] = fdrcorrection0(pvalues[mask])[1]
+
+    significance = np.empty(pvalues.shape)
+    significance.fill(np.nan)
+    significance[mask] = fdrcorrection0(pvalues[mask])[0]
+
+    return corrected_pvalues,significance

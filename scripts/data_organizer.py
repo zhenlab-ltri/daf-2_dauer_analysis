@@ -1,27 +1,23 @@
 import json
 import csv
 import copy
+import pandas as pd
+import numpy as np
 
-from util import open_json
+from util import open_json, write_json, tuple_key, merge, get_key, remove_space, comma_string_to_list
 from neuron_info import ntype, nclass, npair
 
-
-def get_neuron_pair_key (pre, post):
-    return (pre, post)
-
-def merge(dict1, dict2, dict3, dict4):
-    new = {**dict1, **dict2, **dict3, **dict4}
-    return new
-
+#Converting the daf2 json to the same format as the nondauers
 def input_dauer_json_converter(file,name):
 
     dauer_original = open_json(file)
     dauer_connections = {}
     dauer_connections[name] = {}
-    #Converting the daf2 json to the same format as the nondauers
+    
+    
     for i, con in enumerate(dauer_original):
 
-        key = str(get_neuron_pair_key(dauer_original[i]['partners'][0], dauer_original[i]['partners'][1]))
+        key = str(tuple_key(dauer_original[i]['partners'][0], dauer_original[i]['partners'][1]))
 
         if key not in dauer_connections[name].keys():
             dauer_connections[name][key] = 1
@@ -59,64 +55,79 @@ def rename_nondauers(nondauer):
         elif dataset == 'Dataset7':
             nondauer_renamed['adult_TEM'] = nondauer_original[dataset]
 
-        else:
+        elif dataset == 'Dataset8':
             nondauer_renamed['adult_SEM'] = nondauer_original[dataset]
         
+        else:
+            print('There are unknown dataset names')
+            continue
     return nondauer_renamed
 
+#Added the dauer synapse counts to the nondauer connections
 def append_dauer_to_nondauers(nondauer, stig2, stig3, daf2):
-    #Added the daf2 dauer connections to the nondauer connections
+    
     connections = merge(nondauer, daf2, stig2, stig3)
 
-    output_path = 'daf2-dauer-comparisons\\output\\transformed-connections.json'
+    output_path = './output/transformed-connections.json'
 
     with open(output_path, 'w') as f:
         json.dump(connections, f, indent= 2)
     
     return output_path
 
-def get_class_connections(data):
+#Get connections based on cell-to-cell, neuron pairs, or neuron classes
+def get_connections(data, connection_type = 'cell-to-cell'):
     
+    assert connection_type in ('cell-to-cell', 'neuron_pair', 'neuron_class')
+
     #open the json file
     data = open_json(data)
 
-    class_connections = {}
+    connections = {}
 
-    class_connection_list = []
+    connection_list = []
 
     for dataset in data.keys():
-        class_connections[dataset] = {}
+        connections[dataset] = {}
         for connection in data[dataset]:
 
             connection_temp1 = connection.strip('"()')
             connection_temp2 = connection_temp1.replace("'", "")
-            connection_list = connection_temp2.split(', ')
+            neuron_list = connection_temp2.split(', ')
             
-            pre = connection_list[0]
-            post = connection_list[1]
+            pre = neuron_list[0]
+            post = neuron_list[1]
 
-            key = pre + '$' + post
+            if connection_type == 'cell-to-cell':
+                key = get_key(pre, post)
+            
+            elif connection_type == 'neuron_pair':
+                key = get_key(npair(pre), npair(post))
 
-            if key not in class_connections[dataset].keys():
-                class_connections[dataset][key] = data[dataset][connection]
+            else:
+                key = get_key(nclass(pre), nclass(post))
+
+            if key not in connections[dataset].keys():
+                connections[dataset][key] = data[dataset][connection]
         
             else:
-                class_connections[dataset][key] += data[dataset][connection]
-    
-    for dataset, connections in class_connections.items():
-        for key in connections:
-            if key not in class_connection_list:
-                class_connection_list.append(key)
+                connections[dataset][key] += data[dataset][connection]
+
+    for dataset, connection in connections.items():
+        for key in connection:
+            if key not in connection_list:
+                connection_list.append(key)
 
     #Help check numbers with nemanode to make sure it's currectly added
-    #print(class_connections['L1_1']['SAA$AVA'], class_connections['L1_2']['SAA$AVA'], class_connections['L1_3']['SAA$AVA'], class_connections['L2']['SAA$AVA'])
+    #print(connections['L1_1']['SAA$AVA'], connections['L1_2']['SAA$AVA'], connections['L1_3']['SAA$AVA'], connections['L2']['SAA$AVA'])
 
-    output_path = 'daf2-dauer-comparisons\output\connections.json'
+    output_path = './output/connections.json'
 
     with open(output_path, 'w') as f:
-        json.dump(class_connections, f, indent= 2)
+        json.dump(connections, f, indent= 2)
 
-    return output_path, class_connection_list
+    return output_path, connection_list
+
 
 def get_inputs(class_json):
 
@@ -142,7 +153,7 @@ def get_inputs(class_json):
         for neuron in inputs[dataset]:
             inputs[dataset][neuron]['Total'] = sum(inputs[dataset][neuron].values())
     
-    output_path = 'daf2-dauer-comparisons\output\inputs.json'
+    output_path = './output/inputs.json'
 
     with open(output_path, 'w') as f:
         json.dump(inputs, f, indent= 2)
@@ -173,51 +184,88 @@ def get_outputs(class_json):
         for neuron in outputs[dataset]:
             outputs[dataset][neuron]['Total'] = sum(outputs[dataset][neuron].values())
     
-    output_path = 'daf2-dauer-comparisons\output\outputs.json'
+    output_path = './output/outputs.json'
 
     with open(output_path, 'w') as f:
         json.dump(outputs, f, indent= 2)
 
     return output_path
+
+def get_entire_dataset_percentages(class_json, connections_list, outpath, synapse_type = 'count'):
+
+    full_data = open_json(class_json)
+
+    entire_dataset = {}
+
+    if synapse_type == 'count':
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
+
+    else:
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
     
-def get_class_connection_input_percentages(input_json, connections_list,dataset_names):
+    for connection in connections_list:
+        
+        entire_dataset[connection] = {}
+        for name in dataset_names:
+            if connection in full_data[name].keys():
+                total = sum(full_data[name].values())
+                percentage = full_data[name][connection]/total*100
+                entire_dataset[connection][name] = percentage
+            else:
+                entire_dataset[connection][name] = 0.0
+
+    with open(outpath, 'w') as f:
+        json.dump(entire_dataset, f, indent= 2)
+
+
+def get_connection_input_percentages(input_json, connections_list, outpath, synapse_type = 'count'):
 
     input_info = open_json(input_json)
     input_percentages = {}
     consolidated_input_percentages = {}
+
+    if synapse_type == 'count':
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
+
+    else:
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
 
     for dataset in input_info:
         input_percentages[dataset] = {}
         for neuron in input_info[dataset]:
             for input in input_info[dataset][neuron]:
 
-                key = input + '$' + neuron
-
                 if input_info[dataset][neuron]['Total'] != 0 and input != 'Total':
+                    key = get_key(input, neuron)
+                    
                     percentage = input_info[dataset][neuron][input]/input_info[dataset][neuron]['Total']*100
-                    input_percentages[dataset][key] = round(percentage, 2)
+                    input_percentages[dataset][key] = percentage
 
     for connection in connections_list:
+    
         consolidated_input_percentages[connection] = {}
         for name in dataset_names:
             if connection in input_percentages[name].keys():
                 consolidated_input_percentages[connection][name] = input_percentages[name][connection] 
             else:
                 consolidated_input_percentages[connection][name] = 0.0
-    
 
-    output_path = 'daf2-dauer-comparisons\output\input_percentages.json'
 
-    with open(output_path, 'w') as f:
+    with open(outpath, 'w') as f:
         json.dump(consolidated_input_percentages, f, indent= 2)
 
-    return output_path
 
-def get_class_connection_output_percentages(output_json,connections_list,dataset_names):
+def get_connection_output_percentages(output_json,connections_list, outpath, synapse_type = 'count'):
     
     output_info = open_json(output_json)
     output_percentages = {}
     consolidated_output_percentages = {}
+
+    if synapse_type == 'count':
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
+
+    else:
+        dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
 
     for dataset in output_info:
         output_percentages[dataset] = {}
@@ -229,7 +277,7 @@ def get_class_connection_output_percentages(output_json,connections_list,dataset
 
                 if output_info[dataset][neuron]['Total'] != 0 and output != 'Total':
                     percentage = output_info[dataset][neuron][output]/output_info[dataset][neuron]['Total']*100
-                    output_percentages[dataset][key] = round(percentage, 2)
+                    output_percentages[dataset][key] = percentage
 
     for connection in connections_list:
         consolidated_output_percentages[connection] = {}
@@ -238,26 +286,135 @@ def get_class_connection_output_percentages(output_json,connections_list,dataset
                 consolidated_output_percentages[connection][name] = output_percentages[name][connection] 
             else:
                 consolidated_output_percentages[connection][name] = 0.0
-    
-    output_path = 'daf2-dauer-comparisons\output\output_percentages.json'
 
-    with open(output_path, 'w') as f:
+    with open(outpath, 'w') as f:
         json.dump(consolidated_output_percentages, f, indent= 2)
 
-    return output_path
 
+#make nondauer classifications into a dictionary
+def get_classification_dict (connection_type):
+    
+    assert connection_type in ('cell-to-cell', 'neuron_pair', 'neuron_class')
 
+    if connection_type == 'cell-to-cell':
+        classification_file = './input/connection_classifications.csv'
+    
+    else:
+        classification_file = './input/connection_classifications_npair.csv'
+
+    reader = csv.reader(open(classification_file, 'r'))
+
+    next(reader)
+
+    nondauer_classification = {}
+    for row in reader:
+        pre, post, classification = row
+        key = get_key(pre, post)
+
+        nondauer_classification[key] = classification
+
+    row = []
+
+    output_json = './output/nondauer_classification.json'
+
+    for con in nondauer_classification:
+        ccon = nondauer_classification[con]
+        current_row = [con]
+        current_row.extend(ccon)
+        row.append(current_row)
+
+    with open(output_json, 'w') as f:
+        json.dump(nondauer_classification, f, indent= 2)
+
+    return nondauer_classification
+
+def contactome_edge_list (connection_type, compare_contactome_with):
+
+    assert compare_contactome_with in ('all_nondauers', 'L1-L3' )
+    
+    path = './input/contactome.csv'
+
+    dt = pd.read_csv(path).to_dict()
+    dt_temp = dt.copy()
+
+    contact_nodes = list(dt_temp.keys())
+    contact_nodes.pop(0)
+
+    edge_list = {}
+
+    index = {}
+
+    #making a dictionary of numbers and their corresponding partners
+    for i, neuron in enumerate(contact_nodes):
+        index[i] = neuron
+        
+    i = 0
+    #making a dictionary for the neurons corresponding to each index
+    for partners in contact_nodes:
+        pre = partners
+        for num in dt_temp[partners]:
+            
+            post = index[num]
+
+            #convert adjacency matrix values into numpy array
+            contacts = comma_string_to_list(remove_space(dt_temp[partners][num]))
+
+            key = get_key(pre, post)
+            
+            if compare_contactome_with == 'all_nondauers':
+            
+                if np.all(contacts == '0'):
+                    #if neurons don't make contact, nothing is in cell
+                    edge_list[key] = 'N'
+                else:
+                    #if neurons make contact in non-dauer, make cell Y
+                    edge_list[key] = 'Y'
+            
+            elif compare_with == 'L1-L3':
+
+                if np.all(contacts[:-1] == '0'):
+                    #if neurons don't make contact, nothing is in cell
+                    edge_list[key] = 'N'
+                else:
+                    #if neurons make contact in non-dauer, make cell Y
+                    edge_list[key] = 'Y'
+            
+    if connection_type == 'cell-to-cell':
+        
+        json_path = './output/contactome.json'     
+        write_json(json_path, edge_list)
+            
+    elif connection_type == 'neuron_pair':
+
+        npair_edge_list = {}
+        for connection in edge_list:
+            pair = connection.split('$')
+            key = get_key(npair(pair[0]), npair(pair[1]))
+
+            if key not in npair_edge_list.keys():
+                npair_edge_list[key] = edge_list[connection]
+            else:
+                if npair_edge_list[key] == 'N':
+                    npair_edge_list[key] = edge_list[connection]
+                else:
+                    continue
+        
+        json_path = './output/contactome.json'     
+        write_json(json_path, npair_edge_list)
+                    
 
 if __name__ == '__main__':
 
-
-    nondauers = 'daf2-dauer-comparisons\\input\\nondauer_connections.json'
-    daf2_dauer = 'daf2-dauer-comparisons\input\daf2-dauer.json'
-    stig2 = 'daf2-dauer-comparisons\input\stigloher2.json'
-    stig3 = 'daf2-dauer-comparisons\input\stigloher3.json'
-
-    dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer', 'stigloher2', 'stigloher3']
-    comparison_dataset_names = ['L1_1', 'L1_2', "L1_3", 'L1_4', 'L2', 'daf2-dauer']
+    #change if needed 
+    connection_type = 'neuron_pair' #cell-to-cell, neuron_pair
+    compare_contactome_with = 'all_nondauers' #all_nondauers, L1-L3
+    normalize_by = 'entire_dataset' #input, output, entire_dataset
+    synapse_type = 'count' #count, size
+    nondauers = './input/nondauer_synapse_size.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
+    
+    daf2_dauer = './input/daf2-dauer.json'
+    stig2 = './input/stigloher2.json'
+    stig3 = './input/stigloher3.json'
 
 
     nondauer_renamed = rename_nondauers(nondauers.strip())
@@ -267,12 +424,20 @@ if __name__ == '__main__':
 
     nondauer_and_dauer = append_dauer_to_nondauers(nondauer_renamed, stig2_formatted, stig3_formatted, daf2_formatted)
 
-    class_connections, connections_list = get_class_connections(nondauer_and_dauer)
+    class_connections, connections_list = get_connections(nondauer_and_dauer, connection_type = connection_type)
 
+    #normalize against whole dataset
+    get_entire_dataset_percentages(class_connections, connections_list, synapse_type = synapse_type)
+
+    #normalize by input and outputs
     inputs = get_inputs(class_connections)
     outputs = get_outputs(class_connections)
 
-    input_percentages = get_class_connection_input_percentages(inputs, connections_list, dataset_names)
-    output_percentages = get_class_connection_output_percentages(outputs, connections_list, dataset_names)
+    input_percentages = get_connection_input_percentages(inputs, connections_list, synapse_type = synapse_type)
+    output_percentages = get_connection_output_percentages(outputs, connections_list, synapse_type = synapse_type)
 
- 
+    #normalize across whole datasets
+
+    get_classification_dict(connection_type)
+
+    contactome_edge_list(connection_type,compare_contactome_with)
