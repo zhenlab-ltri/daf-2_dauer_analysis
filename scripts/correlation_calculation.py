@@ -79,7 +79,7 @@ def calculate_corecoeff(data, output_path, average_percentage = 'early_L1', syna
                 w_calculations[connections] = list(values)
 
                 if synapse_type == 'count':
-                    w_calculations[connections].extend([percentages[9],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
+                    w_calculations[connections].extend([percentages[8],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
                 
                 else:
                     w_calculations[connections].extend([pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
@@ -103,7 +103,7 @@ def calculate_corecoeff(data, output_path, average_percentage = 'early_L1', syna
                 w_calculations[connections] = list(values)
 
                 if synapse_type == 'count':
-                    w_calculations[connections].extend([percentages[9],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
+                    w_calculations[connections].extend([percentages[8],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
                 
                 else:
                     w_calculations[connections].extend([pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
