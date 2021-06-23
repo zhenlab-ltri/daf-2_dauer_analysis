@@ -6,6 +6,7 @@ import time
 import numpy as np
 import pandas as pd
 from functools import reduce
+from numpy.ma import compress
 from statsmodels.sandbox.stats.multicomp import fdrcorrection0
 
 def get_job_id():
@@ -86,3 +87,11 @@ def fdr_correction(pvalues):
     significance[mask] = fdrcorrection0(pvalues[mask])[0]
 
     return corrected_pvalues,significance
+
+def clean_data(data, range):
+    filter = np.isfinite(data)
+    plot = list(compress(filter, data))
+
+    new_plot = [(range[0]-5) if value < range[0] else (range[1]+5) if value > range[1] else value for value in plot]
+
+    return new_plot
