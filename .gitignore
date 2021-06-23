@@ -5,3 +5,5 @@ output/**
 .DS_Store
 scripts/__pycache__/**
 test/**
+graphs/**
+analysis/**
