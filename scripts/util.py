@@ -48,7 +48,7 @@ def comma_string_to_list(string):
 
 def make_connection_key(data):
     df = pd.read_csv(data)
-    connection = df['Pre'].str.cat(df['Post'], sep = '$')
+    connection = df['Pre Class'].str.cat(df['Post Class'], sep = '$')
     df.insert(0, 'connection', connection)
 
     return df
@@ -92,6 +92,6 @@ def clean_data(data, range):
     filter = np.isfinite(data)
     plot = list(compress(filter, data))
 
-    new_plot = [(range[0]-5) if value < range[0] else (range[1]+5) if value > range[1] else value for value in plot]
 
-    return new_plot
+
+    return plot
