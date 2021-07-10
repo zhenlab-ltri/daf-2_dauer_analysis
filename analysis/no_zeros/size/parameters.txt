@@ -1,5 +1,0 @@
-connection: neuron_pair
-compared contactome with: all_nondauers
-synapse type: size
-zero filter: 0
-pvalue cutoff: 0.05
