@@ -39,13 +39,12 @@ def hist_from_list(data,folder_name, title, bins, range):
     filter = np.isfinite(data)
     plot = list(compress(filter, data))
 
-    new_plot = [(range[0]-5) if value < range[0] else (range[1]+5) if value > range[1] else value for value in plot]
+
     plt.figure(figsize=(8,6))
-    plt.hist(new_plot, bins = bins)
+    plt.hist(plot, bins = bins)
+    plt.xticks(ticks = np.arange(min(data), max(data), step = 20))
     
-    #comment out if wanting to see all the data
-    #plt.xlim(range[0], range[1])
-    #plt.ylim(0, 2500)
+
     plt.title(title)
 
     plt.savefig(f'./graphs/{folder_name}/{title}.pdf', bbox_inches = 'tight')
@@ -88,24 +87,24 @@ def kernel_density_plot(path, title):
 def multi_histogram(data1, data2, data3, name1, name2, name3):
 
 
-
     data12 = data1.merge(data2, left_index = True, right_index = True)
     dataf = data12.merge(data3, left_index = True, right_index = True)
     dataf.to_csv('./output.csv')
 
-    timepoints = np.array([4.3, 16, 23, 27, 50])
+
+    timepoints = np.array([0, 4.3, 16, 23, 27, 50])
     xlabel = 'Predited hours after birth'
     ylabel = 'Number of daf2 dauer connections'
     title = 'Neural age prediction based on different normalization methods'
 
     
-    #plt.figure(figsize=(8,6))
-    #sns.histplot(data = dataf[data1.columns[0]], color = 'skyblue', label=dataf.columns[0], kde = True)
-    #sns.histplot(data = dataf[dataf.columns[1]], color= 'gold', label=dataf.columns[1], kde = True)
-    #sns.histplot(data = dataf[dataf.columns[2]], color= 'teal', label=dataf.columns[2], kde = True)
+    plt.figure(figsize=(8,6))
+    sns.histplot(data = dataf[dataf.columns[1]], color = 'skyblue', label=dataf.columns[1], kde = False)
+    sns.histplot(data = dataf[dataf.columns[3]], color= 'gold', label=dataf.columns[3], kde = False)
+    sns.histplot(data = dataf[dataf.columns[5]], color= 'teal', label=dataf.columns[5], kde = False)
 
      
-    x_axis = np.arange(-250, 150, 50)
+    x_axis = np.arange(-25, 150, 50)
     xticks = np.concatenate((x_axis, timepoints))
 
     plt.title(title)
@@ -118,6 +117,20 @@ def multi_histogram(data1, data2, data3, name1, name2, name3):
 
     plt.show()
 
+def quadrant_graph(data, x, y):
+    plt.scatter(data[x], data[y], color="grey")
+    plt.xlabel(f'{x}')
+    plt.ylabel(f'{y}')
+    plt.grid()
+
+    #axis lines for 0,0
+    plt.axhline()
+    plt.axvline()
+
+    #title
+    plt.title(f'{data}')
+    #plt.show()
+    
 #Ainput  -> B output
 
 #A -> B -> C
