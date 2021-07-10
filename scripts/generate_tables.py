@@ -9,26 +9,26 @@ from pathlib import Path
 from util import write_json, get_job_dir, open_json
 
 
-def generate_table(param_dict):
+def generate_table():
     job_dir = get_job_dir()
     #parameters used for each run, change if needed
-    # compare_contactome_with = 'all_nondauers' #all_nondauers, L1-L3
-    # normalize_by = 'input_output' #input_output, entire_dataset
-    # synapse_type = 'count' #count, size
-    # nondauers = './input/nondauer_synapse_count.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
-    # zero_filter = 10 #0-infinity, 'early_development'
-    # pvalue_cutoff = 0.05
-    # fdr_correction = False
+    connection_type = 'neuron_pair'
+    compare_contactome_with = 'all_nondauers' #all_nondauers, L1-L3
+    synapse_type = 'count' #count, size
+    nondauers = './input/nondauer_synapse_count.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
+    zero_filter = 10 #0-infinity, 'early_development'
+    pvalue_cutoff = 0.05
+    fdr_correction = False
 
-    connection_type = param_dict['connection_type']
-    compare_contactome_with = param_dict['compare_contactome_with']
-    normalize_by = param_dict['normalize_by']
-    synapse_type = param_dict['synapse_type']
-    nondauers = param_dict['nondauers']
-    zero_filter = param_dict['zero_filter']
-    pvalue_cutoff = param_dict['pvalue_cutoff']
-    fdr_correction = param_dict['fdr_correction']
-    zero_filter = param_dict['zero_filter']
+    # connection_type = param_dict['connection_type']
+    # compare_contactome_with = param_dict['compare_contactome_with']
+    # normalize_by = param_dict['normalize_by']
+    # synapse_type = param_dict['synapse_type']
+    # nondauers = param_dict['nondauers']
+    # zero_filter = param_dict['zero_filter']
+    # pvalue_cutoff = param_dict['pvalue_cutoff']
+    # fdr_correction = param_dict['fdr_correction']
+    # zero_filter = param_dict['zero_filter']
 
     #makes a file with the parameters used
     parameter = f'{job_dir}/parameters.txt'
@@ -137,11 +137,14 @@ def generate_table(param_dict):
 
 
 if __name__ == '__main__':
-    generate_tables_param_list_path = Path('./input/generate_table_params.json')
+    generate_table()
+    # generate_tables_param_list_path = Path('./input/generate_table_params.json')
 
-    params_list = open_json(str(generate_tables_param_list_path))
+    # params_list = open_json(str(generate_tables_param_list_path))
 
-    for param_dict in params_list:
-        print(param_dict)
-        generate_table(param_dict)
+    # for param_dict in params_list:
+    #     print(param_dict)
+    #     generate_table(param_dict)
+
+
 
