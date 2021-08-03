@@ -48,4 +48,7 @@ Make new folders `output`, `graphs` and `analysis`
 
 10. Run `connection_classification.py`
 
-11. Run `summary_plot.py`
+11. Edit summary_plot.py with your values for:
+    - ```compare``` = daf2-dauer or L3 (Make sure this is the same value as above)
+    
+12.  Run `summary_plot.py`
