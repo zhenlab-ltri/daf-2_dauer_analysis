@@ -15,8 +15,9 @@ def generate_table():
     connection_type = 'neuron_pair'
     compare_contactome_with = 'all_nondauers' #all_nondauers, L1-L3
     synapse_type = 'count' #count, size
-    nondauers = './input/nondauer_synapse_count.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
+    nondauers = f'./input/nondauer_synapse_{synapse_type}.json' 
     zero_filter = 10 #0-infinity, 'early_development'
+    compare = 'L3' #daf-2, L3, or adult_SEM
     pvalue_cutoff = 0.05
     fdr_correction = False
 
@@ -91,16 +92,16 @@ def generate_table():
     json_output_changes_outpath = f'{job_dir}/output_changes.json'
 
     #calculate correlation coefficients
-    input_w_analysis = cc.calculate_corecoeff(input_percentages, inputs_coreff, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
-    output_w_analysis = cc.calculate_corecoeff(output_percentages, outputs_coreff, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
+    input_w_analysis = cc.calculate_corecoeff(input_percentages, inputs_coreff, compare = compare, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
+    output_w_analysis = cc.calculate_corecoeff(output_percentages, outputs_coreff, compare = compare, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
 
     #outputs to json
     write_json(json_input_changes_outpath, input_w_analysis)
     write_json(json_output_changes_outpath, output_w_analysis)
 
     #ouptut to csv
-    cc.analysis_results_to_csv(csv_input_changes_outpath, json_input_changes_outpath, synapse_type= synapse_type, fdr_correction = fdr_correction)
-    cc.analysis_results_to_csv(csv_output_changes_outpath, json_output_changes_outpath, synapse_type= synapse_type, fdr_correction = fdr_correction)
+    cc.analysis_results_to_csv(csv_input_changes_outpath, json_input_changes_outpath, synapse_type= synapse_type, compare = compare, fdr_correction = fdr_correction)
+    cc.analysis_results_to_csv(csv_output_changes_outpath, json_output_changes_outpath, synapse_type= synapse_type, compare = compare, fdr_correction = fdr_correction)
 
     #split csv based on pvalues
     cc.filter_by_pvalue(csv_input_changes_outpath, csv_input_sig_pvalue, csv_input_low_pvalue, pvalue_cutoff = pvalue_cutoff, fdr_correction = fdr_correction)
@@ -124,13 +125,13 @@ def generate_table():
     json_total_changes_outpath = f'{job_dir}/total_changes.json'
 
     #calculate correlation coefficients
-    total_w_analysis = cc.calculate_corecoeff(total, total_coreff, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
+    total_w_analysis = cc.calculate_corecoeff(total, total_coreff, compare = compare, synapse_type= synapse_type, zero_filter = zero_filter, fdr_correction = fdr_correction)
 
     #outputs to json
     write_json(json_total_changes_outpath, total_w_analysis)
 
     #ouptut to csv
-    cc.analysis_results_to_csv(csv_total_changes_outpath, json_total_changes_outpath, synapse_type= synapse_type, fdr_correction = fdr_correction)
+    cc.analysis_results_to_csv(csv_total_changes_outpath, json_total_changes_outpath, synapse_type= synapse_type, compare = compare, fdr_correction = fdr_correction)
 
     #split csv based on pvalues
     cc.filter_by_pvalue(csv_total_changes_outpath, csv_total_sig_pvalue, csv_total_low_pvalue, pvalue_cutoff = pvalue_cutoff, fdr_correction = fdr_correction)

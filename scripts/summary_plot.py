@@ -25,8 +25,9 @@ def subplot_median (df, ax, colour):
         idx = labels.index(method)
         ax.hlines(df[df['Normalization'] == method]['Neural Age'].mean(), ticks[idx]-w, ticks[idx]+w, color = colour, zorder = 10)
 
+compare = 'L3'
 
-df = pd.read_csv('./graphs/nonparametric_bootstrapping/neural_age_info_summary.csv')
+df = pd.read_csv(f'./graphs/{compare}/nonparametric_bootstrapping/neural_age_info_summary.csv')
 
 #changing slope from value to category
 df['slope'] = np.where( df['slope'] > 0 , 'positive', 'negative')
@@ -165,7 +166,8 @@ for x in range(3):
             x = 'Normalization', 
             y = 'Neural Age',
             edgecolor='black',
-            palette = ['r'],
+            hue = 'slope',
+            
             linewidth= 1, 
             data = inside, 
             size = 4, 
@@ -196,18 +198,18 @@ for x in range(3):
 
 plt.figure()
 ax4 = plt.figsize=(8, 6)
-sns.stripplot(
-    x = 'Normalization', 
-    y = 'Neural Age',
-    edgecolor='black',
-    palette = ['r'],
-    linewidth= 1, 
-    data = inside, 
-    size = 4, 
-    zorder = 5,
-    jitter= True,
-    dodge=False,
-    alpha=0.7)
+# sns.stripplot(
+#     x = 'Normalization', 
+#     y = 'Neural Age',
+#     edgecolor='black',
+#     palette = ['r'],
+#     linewidth= 1, 
+#     data = inside, 
+#     size = 4, 
+#     zorder = 5,
+#     jitter= True,
+#     dodge=False,
+#     alpha=0.7)
 
 #plot_median(df, 'grey')
 plot_median(inside, 'black')
@@ -223,19 +225,18 @@ plot_median(inside, 'black')
 #     palette=palette,
 #     zorder = 5)
 
-# sns.stripplot(
-#     x = 'Normalization', 
-#     y = 'Neural Age', 
-#     hue = 'classification', 
-#     data = between, 
-#     size = 4, 
-#     palette=palette,
-#     marker = 'd',
-#     zorder = 5)
+sns.stripplot(
+    x = 'Normalization', 
+    y = 'Neural Age', 
+    hue = 'classification', 
+    data = between, 
+    size = 4, 
+    zorder = 5)
 
 # extraticks = [4.3, 16, 23, 27, 50]
 # plt.yticks(list(plt.yticks()[0]) + extraticks)
 
-#plt.legend(bbox_to_anchor=(1.05, 1.0, 0.3, 0.2), loc='upper left')
+plt.legend(bbox_to_anchor=(1.05, 1.0, 0.3, 0.2), loc='upper left')
+plt.tight_layout()
 
-#plt.show()
+plt.show()

@@ -34,13 +34,16 @@ def get_contactome_info(pair):
         return 'not in nondauer contactome'
 
 
-def calculate_corecoeff(data, output_path, average_percentage = 'early_L1', synapse_type = 'count', zero_filter = 10, fdr_correction = False):
+def calculate_corecoeff(data, output_path, compare, average_percentage = 'early_L1', synapse_type = 'count', zero_filter = 10, fdr_correction = False):
     dataset = open_json(data)
     w_calculations = {}
     #timepoints = [0, 5, 8, 16, 23, 27, 50, 50]
 
-    if average_percentage == 'early_L1' and synapse_type == 'count':
+    if compare == 'daf-2' and average_percentage == 'early_L1' and synapse_type == 'count':
         timepoints = [4.3, 16, 23, 27, 50, 50]
+
+    elif compare == 'L3' and average_percentage == 'early_L1' and synapse_type == 'count':
+        timepoints = [4.3, 16, 23, 50, 50]
     
     else:
         timepoints = [4.3, 16, 23, 27, 50]
@@ -51,12 +54,20 @@ def calculate_corecoeff(data, output_path, average_percentage = 'early_L1', syna
         if average_percentage == 'early_L1':
             early_L1 = np.mean(percentages[0:3])
             values = [early_L1]
-        
-        if synapse_type == 'count':
-            values.extend(percentages[3:8])
-            values = np.array(values)
 
         
+        if synapse_type == 'count':
+            if compare == 'L3':
+                values.extend(percentages[3:5])
+                values.extend(percentages[6:8])
+                values = np.array(values)
+            elif compare == 'adult_SEM':
+                values.extend(percentages[3:7])
+                values = np.array(values)
+            else:
+                values.extend(percentages[3:8])
+                values = np.array(values)
+
         else:
             values.extend(percentages[3:7])
             values = np.array(values)
@@ -78,8 +89,14 @@ def calculate_corecoeff(data, output_path, average_percentage = 'early_L1', syna
 
                 w_calculations[connections] = list(values)
 
-                if synapse_type == 'count':
+                if synapse_type == 'count' and compare == 'daf-2':
                     w_calculations[connections].extend([percentages[8],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
+                
+                elif synapse_type == 'count' and compare == 'L3':
+                    w_calculations[connections].extend([percentages[5],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
+                
+                elif synapse_type == 'count' and compare == 'adult_SEM':
+                    w_calculations[connections].extend([percentages[7],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
                 
                 else:
                     w_calculations[connections].extend([pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
@@ -151,26 +168,42 @@ def filter_by_pvalue (data, sig_outpath, low_outpath, pvalue_cutoff, fdr_correct
     df_low.to_csv(low_outpath, index = False)
 
 
-def analysis_results_to_csv(filepath, data, synapse_type, fdr_correction = False):
+def analysis_results_to_csv(filepath, data, synapse_type, compare, fdr_correction = False):
 
     data = open_json(data)
 
     if fdr_correction == True:
 
-        if synapse_type == 'count':
+        if synapse_type == 'count' and compare == 'daf-2':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'daf2-dauer',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue', 'Spearman significance','classification', 'nondauer contact']]
 
-        elif synapse_type =='size':
+        elif synapse_type == 'count' and compare == 'L3':
+             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'L3',
+                "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue', 'Spearman significance','classification', 'nondauer contact']]
+        
+        elif synapse_type == 'count' and compare == 'adult_SEM':
+            row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'standard deviation', 'median absolute deviation', 'adult_SEM',
+            "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue', 'Spearman significance','classification', 'nondauer contact']]
+
+        elif synapse_type =='size' and compare == 'daf-2':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_SEM', 'standard deviation', 'median absolute deviation',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue','Spearman significance','classification', 'nondauer contact']]
         
     else:
-        if synapse_type == 'count':
+        if synapse_type == 'count' and compare == 'daf-2':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'daf2-dauer',
-                "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
+            "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
+        
+        elif synapse_type == 'count' and compare == 'L3':
+            row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'L3',
+            "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
+        
+        elif synapse_type == 'count' and compare == 'adult_SEM':
+            row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'adult_TEM', 'standard deviation', 'median absolute deviation', 'adult_SEM',
+            "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
 
-        elif synapse_type =='size':
+        elif synapse_type =='size' and compare == 'daf-2':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_SEM', 'standard deviation', 'median absolute deviation',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'classification', 'nondauer contact']]
         

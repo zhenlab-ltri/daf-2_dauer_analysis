@@ -14,10 +14,10 @@ from plotter import multi_histogram, hist_from_list, quadrant_graph
 
 
 def load_data(filter): 
-    #load outputs from 3 different normalization methods
-    df_total = make_connection_key(f'./analysis/{filter}/count/total_changes.csv')
-    df_input = make_connection_key(f'./analysis/{filter}/count/input_changes.csv')
-    df_output = make_connection_key(f'./analysis/{filter}/count/output_changes.csv')
+    #CHANGE THIS ACORDINGLY load outputs from 3 different normalization methods
+    df_total = make_connection_key(f'./analysis/test/{filter}/count/total_changes.csv')
+    df_input = make_connection_key(f'./analysis/test/{filter}/count/input_changes.csv')
+    df_output = make_connection_key(f'./analysis/test/{filter}/count/output_changes.csv')
 
     return df_total, df_input, df_output
 
@@ -37,14 +37,14 @@ def plot_line(slope, intercept):
     plt.plot(x_vals, y_vals, '--')
 
 #outputs daf2 dauer unique connections, this is the same regardless of normalization method
-def daf2_dauer_unique(filter):
+def daf2_dauer_unique(filter, compare):
 
     #load outputs from 3 different normalization methods
     df_total, df_input, df_output = load_data('all_connections')
 
-    total_unique = df_total[(df_total['Spearman pvalue'].isnull()) & (df_total['daf2-dauer'] > 0)]
-    input_unique = df_input[(df_input['Spearman pvalue'].isnull()) & (df_input['daf2-dauer'] > 0)]
-    output_unique = df_output[(df_output['Spearman pvalue'].isnull()) & (df_output['daf2-dauer'] > 0)]
+    total_unique = df_total[(df_total['Spearman pvalue'].isnull()) & (df_total[f'{compare}'] > 0)]
+    input_unique = df_input[(df_input['Spearman pvalue'].isnull()) & (df_input[f'{compare}'] > 0)]
+    output_unique = df_output[(df_output['Spearman pvalue'].isnull()) & (df_output[f'{compare}'] > 0)]
 
     if total_unique['connection'].equals(input_unique['connection']) & input_unique['connection'].equals(output_unique['connection']):
         daf2_dauer_unique = total_unique
@@ -60,14 +60,14 @@ def daf2_dauer_unique(filter):
 
     return daf2_dauer_unique
 
-def daf2_dauer_pruned(filter, pvalue_cutoff, pvalue_shared = True):
+def daf2_dauer_pruned(filter, pvalue_cutoff, compare, pvalue_shared = True):
 
     #load outputs from 3 different normalization methods
     total_all, input_all, output_all = load_data(filter)
 
-    total_pruned = total_all[(total_all['Spearman pvalue'].notnull()) & (total_all['daf2-dauer'] == 0)]
-    input_pruned = input_all[(input_all['Spearman pvalue'].notnull()) & (input_all['daf2-dauer'] == 0)]
-    output_pruned = output_all[(output_all['Spearman pvalue'].notnull()) & (output_all['daf2-dauer'] == 0)]
+    total_pruned = total_all[(total_all['Spearman pvalue'].notnull()) & (total_all[f'{compare}'] == 0)]
+    input_pruned = input_all[(input_all['Spearman pvalue'].notnull()) & (input_all[f'{compare}'] == 0)]
+    output_pruned = output_all[(output_all['Spearman pvalue'].notnull()) & (output_all[f'{compare}'] == 0)]
 
     if total_pruned['connection'].equals(input_pruned['connection']) & input_pruned['connection'].equals(output_pruned['connection']):
         daf2_dauer_pruned = total_pruned[['connection']]
@@ -116,18 +116,18 @@ def daf2_dauer_pruned(filter, pvalue_cutoff, pvalue_shared = True):
 
         return daf2_dauer_pruned, total, input, output
 
-def get_shared (filter, pvalue_cutoff, pvalue_shared = True):
+def get_shared (filter, pvalue_cutoff, compare, pvalue_shared = True):
 
     total_all, input_all, output_all = load_data(filter)
 
-    total_shared = total_all[(total_all['Spearman pvalue'].notnull()) & (total_all['daf2-dauer'] > 0)]
+    total_shared = total_all[(total_all['Spearman pvalue'].notnull()) & (total_all[f'{compare}'] > 0)]
     
     total_sig, total_lo = pvalue_filter(total_shared, pvalue_cutoff)
 
-    input_shared = input_all[(input_all['Spearman pvalue'].notnull()) & (input_all['daf2-dauer'] > 0)]
+    input_shared = input_all[(input_all['Spearman pvalue'].notnull()) & (input_all[f'{compare}'] > 0)]
     input_sig, input_lo = pvalue_filter(input_shared, pvalue_cutoff)
     
-    output_shared = output_all[(output_all['Spearman pvalue'].notnull()) & (output_all['daf2-dauer'] > 0)]
+    output_shared = output_all[(output_all['Spearman pvalue'].notnull()) & (output_all[f'{compare}'] > 0)]
     output_sig, output_lo = pvalue_filter(output_shared, pvalue_cutoff)    
     
     if pvalue_shared == True:
@@ -172,25 +172,35 @@ def get_shared (filter, pvalue_cutoff, pvalue_shared = True):
 
         return total_shared, input_shared, output_shared, total_sig, total_lo, input_sig, input_lo, output_sig, output_lo
 
-def inrange(data, name,threshold = 2):
+def inrange(data, name,compare, threshold = 2):
 
-    data['max'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM']].max(axis=1)
-    data['min'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM']].min(axis=1)
+    if compare == 'daf2-dauer':
+        data['max'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM']].max(axis=1)
+        data['min'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM']].min(axis=1)
 
-    in_range = data['daf2-dauer'].between(data['min'], data['max']).astype(int)
+    elif compare == 'L3':
+        data['max'] = data[['Early L1', 'Late L1', 'L2', 'adult_TEM', 'adult_SEM']].max(axis=1)
+        data['min'] = data[['Early L1', 'Late L1', 'L2', 'adult_TEM', 'adult_SEM']].min(axis=1)
+
+    elif compare == 'adult_SEM':
+        data['max'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM']].max(axis=1)
+        data['min'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM']].min(axis=1)
+ 
+
+    in_range = data[f'{compare}'].between(data['min'], data['max']).astype(int)
     data.insert(14, 'daf2 in nondauer range', in_range)
-    #print(data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer', 'daf2 in nondauer range']])
+    #print(data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', f'{compare}', 'daf2 in nondauer range']])
 
-    data['daf2 increase'] = np.where(data['daf2-dauer']> data['max'], 1, 0)
-    data['daf2 decrease'] = np.where(data['daf2-dauer']< data['min'], 1, 0)
+    data['daf2 increase'] = np.where(data[f'{compare}']> data['max'], 1, 0)
+    data['daf2 decrease'] = np.where(data[f'{compare}']< data['min'], 1, 0)
 
     data['median'] = data[['Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM']].median(axis = 1)
     data['2 mad max'] = data['max'] + threshold * data['median absolute deviation']
     data['2 mad min'] = data['min'] - threshold * data['median absolute deviation']
 
-    #data['daf2 in nondauer range'] = np.where(data['daf2-dauer'].between(data['2 mad min'], data['2 mad max']), 1, 0)
-    #data['daf2 increase'] = np.where(data['daf2-dauer']> data['max_cutoff'], 1, 0)
-    #data['daf2 decrease'] = np.where(data['daf2-dauer']< data['min_cutoff'], 1, 0)
+    #data['daf2 in nondauer range'] = np.where(data[f'{compare}'].between(data['2 mad min'], data['2 mad max']), 1, 0)
+    #data['daf2 increase'] = np.where(data[f'{compare}']> data['max_cutoff'], 1, 0)
+    #data['daf2 decrease'] = np.where(data[f'{compare}']< data['min_cutoff'], 1, 0)
 
     print(name, Counter(data['daf2 in nondauer range']))
     print('increase', Counter(data['daf2 increase']))
@@ -237,7 +247,7 @@ def get_ci(data, alpha = 0.95):
 
     return lower, upper
 
-def daf2_mapper (data, name, cutoff, nonparametric = True):
+def daf2_mapper (data, name, cutoff, compare, nonparametric = True):
 
     #index to keep track of number of connections
     i = 0
@@ -248,20 +258,43 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
     #find the number of connections with only Spearman pvalues < the cutoff 
     spearman_only = data[(data['Spearman pvalue'] < cutoff) & (data['Pearson pvalue'] > cutoff)]
     
-    print(f'{name} has {len(data)} significant connections')
-    print(f'{name} : {len(spearman_only)} connections have only Spearman pvalues < {cutoff}')
-    print(f'{name} : {len(df)} connections are being mapped for neural age')
+    print(f'{compare} {name} has {len(data)} significant connections')
+    print(f'{compare} {name} : {len(spearman_only)} connections have only Spearman pvalues < {cutoff}')
+    print(f'{compare} {name} : {len(df)} connections are being mapped for neural age')
 
-    df = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer','connection','classification']]
-    timepoints =np.array([[4.3, 16, 23, 27, 50, 50]])
-    xmin = min(timepoints[0])
-    xmax = max(timepoints[0])
+    if compare == 'daf2-dauer':
+        df = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'daf2-dauer','connection','classification']]
+        timepoints =np.array([[4.3, 16, 23, 27, 50, 50]])
+        xmin = min(timepoints[0])
+        xmax = max(timepoints[0])
 
-    all = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM','daf2-dauer','connection']].set_index('connection').T
-    filter_to = ['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM','connection']
-    ax = all[all.index.isin(filter_to)]
-    ax = ax.rename(index = {'Early L1': 4.3 ,'Late L1': 16, 'L2':23, 'L3':27, 'adult_TEM':50, 'adult_SEM':50})
+        all = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM','daf2-dauer','connection']].set_index('connection').T
+        filter_to = ['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM','connection']
+        ax = all[all.index.isin(filter_to)]
+        ax = ax.rename(index = {'Early L1': 4.3 ,'Late L1': 16, 'L2':23, 'L3':27, 'adult_TEM':50, 'adult_SEM':50})
+    
+    elif compare == 'L3':
+        df = df[['Early L1','Late L1', 'L2', 'adult_TEM', 'adult_SEM', 'L3','connection','classification']]
+        timepoints =np.array([[4.3, 16, 23, 50, 50]])
+        xmin = min(timepoints[0])
+        xmax = max(timepoints[0])
 
+        all = df[['Early L1','Late L1', 'L2', 'adult_TEM', 'adult_SEM','L3','connection']].set_index('connection').T
+        filter_to = ['Early L1','Late L1', 'L2', 'adult_TEM', 'adult_SEM','connection']
+        ax = all[all.index.isin(filter_to)]
+        ax = ax.rename(index = {'Early L1': 4.3 ,'Late L1': 16, 'L2':23, 'adult_TEM':50, 'adult_SEM':50})
+    
+    elif compare == 'adult_SEM':
+        df = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM','connection','classification']]
+        timepoints =np.array([[4.3, 16, 23, 50, 50]])
+        xmin = min(timepoints[0])
+        xmax = max(timepoints[0])
+
+        all = df[['Early L1','Late L1', 'L2', 'L3', 'adult_TEM','adult_SEM','connection']].set_index('connection').T
+        filter_to = ['Early L1','Late L1', 'L2', 'L3', 'adult_TEM','connection']
+        ax = all[all.index.isin(filter_to)]
+        ax = ax.rename(index = {'Early L1': 4.3 ,'Late L1': 16, 'L2':23, 'L3':27, 'adult_TEM':50})
+        
     mapping = {}
     dauer_state = {}
     all_neural_ages = []
@@ -271,7 +304,7 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
         x, y = ax[connection].index.values, ax[connection].values
 
         con_name = connection.replace('/', '')
-        pp = PdfPages(f'./graphs/nonparametric_bootstrapping/{name}/{con_name}.pdf')
+        pp = PdfPages(f'./graphs/{compare}/nonparametric_bootstrapping/{name}/{con_name}.pdf')
         fig = plt.figure(figsize=(16,6))
         ax0 = fig.add_subplot(121)
 
@@ -373,7 +406,7 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
         
         pp.close()
     
-    hist_from_list(all_neural_ages, f'nonparametric_bootstrapping/{name}', f'All {name} Neural Age', 50, [0, 50])
+    hist_from_list(all_neural_ages, f'/{compare}/nonparametric_bootstrapping/{name}', f'All {name} Neural Age', 50, [0, 50])
     
     
     df_daf2_mapping = pd.DataFrame.from_dict(mapping, orient = 'index')
@@ -386,11 +419,12 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
     
     ##output excel data for normalization scatter plot including raw data
     df_daf2_mapping_raw = df_daf2_mapping.merge(df, on = ['connection'], how = 'inner')
-    df_daf2_mapping_raw.to_csv(f'./graphs/nonparametric_bootstrapping/{name}_normalized_neural_ages.csv')
+    df_daf2_mapping_raw.to_csv(f'./graphs/{compare}/nonparametric_bootstrapping/{name}_normalized_neural_ages.csv')
 
     classification = df[['connection','classification']]
     with_classification = df_daf2_mapping.merge(classification, on = ['connection'], how = 'inner')
 
+    #sort by neural age
     df = with_classification.sort_values(by = [f'{name}'])
     df_new = df.reset_index()
     df_new['index'] = df_new.index
@@ -421,7 +455,7 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
 
     plt.suptitle(f'Normalization against {name} connections\n')
     plt.tight_layout()
-    plt.savefig(f'./graphs/nonparametric_bootstrapping/{name}/Normalization against {name} connections zoomed in.pdf', bbox_inches = 'tight')
+    plt.savefig(f'./graphs/{compare}/nonparametric_bootstrapping/{name}/Normalization against {name} connections zoomed in.pdf', bbox_inches = 'tight')
     
 
     return df_daf2_mapping[name].to_frame()
@@ -430,54 +464,55 @@ def daf2_mapper (data, name, cutoff, nonparametric = True):
 if __name__ == '__main__':
 
     filter = '1_zero_in_early_development'
-    job_dir = f'./output/connection_lists/{filter}'
+    job_dir = f'./output/connection_lists/test/{filter}'
     
     #pvalue cutoff
     cutoff = 0.05
 
     #Whether to find connections with pvalues that are consistently less than the cutoff regardless of normalization method
     find_shared_stable_pvalues = False
+    compare = 'daf2-dauer' #daf2-dauer, L3, or adult_SEM
 
-    unique = daf2_dauer_unique(filter)
+    unique = daf2_dauer_unique(filter, compare = compare)
 
     # #output csv files for daf2 dauer unique
     # unique.to_csv(f'{job_dir}/daf2_dauer_unique.csv', index = False)
 
     if find_shared_stable_pvalues == False:
-        pruned, total_pruned, input_pruned, output_pruned = daf2_dauer_pruned(filter, cutoff, find_shared_stable_pvalues)
-        total_shared, input_shared, output_shared, total_sig, total_lo, input_sig, input_lo, output_sig, output_lo = get_shared(filter, cutoff, find_shared_stable_pvalues)
+        pruned, total_pruned, input_pruned, output_pruned = daf2_dauer_pruned(filter, cutoff, compare = compare, pvalue_shared = find_shared_stable_pvalues)
+        total_shared, input_shared, output_shared, total_sig, total_lo, input_sig, input_lo, output_sig, output_lo = get_shared(filter, cutoff, compare = compare, pvalue_shared = find_shared_stable_pvalues)
 
-        # #output excel file with pruned connections by normalization method
-        # with pd.ExcelWriter(f'{job_dir}/daf2_dauer_pruned_by_normalization.xlsx') as writer:
-        #     pruned.to_excel (writer, sheet_name = 'pruned', index = False)
-        #     total_pruned.to_excel (writer, sheet_name = 'total', index = False)
-        #     input_pruned.to_excel (writer, sheet_name = 'input', index = False)
-        #     output_pruned.to_excel (writer, sheet_name = 'output', index = False)
+        #output excel file with pruned connections by normalization method
+        with pd.ExcelWriter(f'{job_dir}/daf2_dauer_pruned_by_normalization.xlsx') as writer:
+            pruned.to_excel (writer, sheet_name = 'pruned', index = False)
+            total_pruned.to_excel (writer, sheet_name = 'total', index = False)
+            input_pruned.to_excel (writer, sheet_name = 'input', index = False)
+            output_pruned.to_excel (writer, sheet_name = 'output', index = False)
 
-        #check of connections are increasing or decreasing
-        # inrange(total_lo, 'total all')
-        # inrange(input_lo, 'input all')
-        # inrange(output_lo, 'output all')
+        #check if connections are increasing or decreasing
+        inrange(total_lo, 'total all', compare = compare)
+        inrange(input_lo, 'input all', compare = compare)
+        inrange(output_lo, 'output all', compare = compare)
 
-        total_all = daf2_mapper(total_sig, 'Total_all', cutoff)
-        input_all = daf2_mapper(input_sig, 'Input_all', cutoff)
-        output_all = daf2_mapper(output_sig, 'Output_all', cutoff)
+        total_all = daf2_mapper(total_sig, 'Total_all', cutoff, compare = compare)
+        input_all = daf2_mapper(input_sig, 'Input_all', cutoff, compare = compare)
+        output_all = daf2_mapper(output_sig, 'Output_all', cutoff, compare = compare)
 
-        # total_all_path = './graphs/nonparametric_bootstrapping/Total_all_normalized_neural_ages.csv'
-        # input_all_path = './graphs/nonparametric_bootstrapping/Input_all_normalized_neural_ages.csv'
-        # output_all_path = './graphs/nonparametric_bootstrapping/Output_all_normalized_neural_ages.csv'
+        total_all_path = f'./graphs/{compare}/nonparametric_bootstrapping/Total_all_normalized_neural_ages.csv'
+        input_all_path = f'./graphs/{compare}/nonparametric_bootstrapping/Input_all_normalized_neural_ages.csv'
+        output_all_path = f'./graphs/{compare}/nonparametric_bootstrapping/Output_all_normalized_neural_ages.csv'
         
-        # df_ta = pd.read_csv(total_all_path)
+        df_ta = pd.read_csv(total_all_path)
         
-        # df_ia = pd.read_csv(input_all_path)
+        df_ia = pd.read_csv(input_all_path)
         
-        # df_oa = pd.read_csv(output_all_path)
+        df_oa = pd.read_csv(output_all_path)
 
-        # multi_histogram(df_ta, df_ia, df_oa,'All Total', 'All Input', 'All Output')
+        multi_histogram(df_ta, df_ia, df_oa,'All Total', 'All Input', 'All Output')
 
     else:
-        pruned, pruned_sig, pruned_not_sig = daf2_dauer_pruned(filter, cutoff, find_shared_stable_pvalues)
-        total_shared, input_shared, output_shared, total_shared_sig, input_shared_sig, output_shared_sig, total_shared_lo, input_shared_lo, output_shared_lo, shared_sig, shared_not_sig = get_shared(filter, cutoff, find_shared_stable_pvalues)
+        pruned, pruned_sig, pruned_not_sig = daf2_dauer_pruned(filter, cutoff, compare = compare, pvalue_shared= find_shared_stable_pvalues)
+        total_shared, input_shared, output_shared, total_shared_sig, input_shared_sig, output_shared_sig, total_shared_lo, input_shared_lo, output_shared_lo, shared_sig, shared_not_sig = get_shared(filter, cutoff, compare = compare, pvalue_shared = find_shared_stable_pvalues)
     
         # #output csv files for pruned and nondauer/daf2 dauer shared connection lists
         # pruned_sig.to_csv(f'{job_dir}/daf2_dauer_pruned_p<{cutoff}.csv', index = False)
@@ -486,17 +521,17 @@ if __name__ == '__main__':
         # shared_not_sig.to_csv(f'{job_dir}/shared_p>{cutoff}.csv', index = False)
 
         # #check of connections are increasing or decreasing
-        # inrange(total_shared_lo, 'total')
-        # inrange(input_shared_lo, 'input')
-        # inrange(output_shared_lo, 'output')
+        # inrange(total_shared_lo, compare = compare, 'total')
+        # inrange(input_shared_lo, compare = compare, 'input')
+        # inrange(output_shared_lo, compare = compare, 'output')
 
         # total = daf2_mapper(total_shared_sig, 'Total', cutoff)
         # input = daf2_mapper(input_shared_sig, 'Input', cutoff)
         # output = daf2_mapper(output_shared_sig, 'Output', cutoff)
 
-        # total_path = './graphs/nonparametric_bootstrapping/Total_normalized_neural_ages.csv'
-        # input_path = './graphs/nonparametric_bootstrapping/Input_normalized_neural_ages.csv'
-        # output_path = './graphs/nonparametric_bootstrapping/Output_normalized_neural_ages.csv'
+        # total_path = f'./graphs/{compare}/nonparametric_bootstrapping/Total_normalized_neural_ages.csv'
+        # input_path = f'./graphs/{compare}/nonparametric_bootstrapping/Input_normalized_neural_ages.csv'
+        # output_path = f'./graphs/{compare}/nonparametric_bootstrapping/Output_normalized_neural_ages.csv'
         
         # df_t = pd.read_csv(total_path)
         
