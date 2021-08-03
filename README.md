@@ -24,7 +24,7 @@ Make new folders `output`, `graphs` and `analysis`
    - ```connection_type```: cell-to-cell or neuron_pair (Make sure this matches data_organizer.py)
    - ```compare_contactome_with```: all_nondauer or L1-L3 (Make sure this matches data_organizer.py)
    - ```synapse_type```: count or size(Make sure this matches data_organizer.py)
-   - ```zero_filter```: 10 (All data) or 'early_development' (filter to allow 1 zero in early development)
+   - ```zero_filter```: 10 (all data) or 'early_development' (filter to allow 1 zero in early development)
    - ```compare```: daf2-dauer or L3 (L3 was added for proof of concept purposes)
    - ```pvalue_cutoff```: Your desired pvalue threshold, 0.05 is default
    - ```fdr_correction```: True or False 
