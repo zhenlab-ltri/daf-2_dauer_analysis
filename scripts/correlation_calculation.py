@@ -39,7 +39,7 @@ def calculate_corecoeff(data, output_path, compare, average_percentage = 'early_
     w_calculations = {}
     #timepoints = [0, 5, 8, 16, 23, 27, 50, 50]
 
-    if compare == 'daf-2' and average_percentage == 'early_L1' and synapse_type == 'count':
+    if compare == 'daf2-dauer' and average_percentage == 'early_L1' and synapse_type == 'count':
         timepoints = [4.3, 16, 23, 27, 50, 50]
 
     elif compare == 'L3' and average_percentage == 'early_L1' and synapse_type == 'count':
@@ -89,7 +89,7 @@ def calculate_corecoeff(data, output_path, compare, average_percentage = 'early_
 
                 w_calculations[connections] = list(values)
 
-                if synapse_type == 'count' and compare == 'daf-2':
+                if synapse_type == 'count' and compare == 'daf2-dauer':
                     w_calculations[connections].extend([percentages[8],pearsons, spearmans, pearsons_pvalue, spearmans_pvalue])
                 
                 elif synapse_type == 'count' and compare == 'L3':
@@ -174,7 +174,7 @@ def analysis_results_to_csv(filepath, data, synapse_type, compare, fdr_correctio
 
     if fdr_correction == True:
 
-        if synapse_type == 'count' and compare == 'daf-2':
+        if synapse_type == 'count' and compare == 'daf2-dauer':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'daf2-dauer',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue', 'Spearman significance','classification', 'nondauer contact']]
 
@@ -186,12 +186,12 @@ def analysis_results_to_csv(filepath, data, synapse_type, compare, fdr_correctio
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'standard deviation', 'median absolute deviation', 'adult_SEM',
             "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue', 'Spearman significance','classification', 'nondauer contact']]
 
-        elif synapse_type =='size' and compare == 'daf-2':
+        elif synapse_type =='size' and compare == 'daf2-dauer':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_SEM', 'standard deviation', 'median absolute deviation',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'Adjusted Pearsons pvalue', 'Pearson significance', 'Adjusted Spearmans pvalue','Spearman significance','classification', 'nondauer contact']]
         
     else:
-        if synapse_type == 'count' and compare == 'daf-2':
+        if synapse_type == 'count' and compare == 'daf2-dauer':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_TEM', 'adult_SEM', 'standard deviation', 'median absolute deviation', 'daf2-dauer',
             "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
         
@@ -203,7 +203,7 @@ def analysis_results_to_csv(filepath, data, synapse_type, compare, fdr_correctio
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'adult_TEM', 'standard deviation', 'median absolute deviation', 'adult_SEM',
             "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue','classification', 'nondauer contact']]
 
-        elif synapse_type =='size' and compare == 'daf-2':
+        elif synapse_type =='size' and compare == 'daf2-dauer':
             row = [['Pre Class', 'Post Class', 'Pre', 'Post', 'Early L1', 'Late L1', 'L2', 'L3', 'adult_SEM', 'standard deviation', 'median absolute deviation',
                 "Pearson's correlation", "Spearman's correlation", 'Pearson pvalue', 'Spearman pvalue', 'classification', 'nondauer contact']]
         
