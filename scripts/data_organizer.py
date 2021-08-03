@@ -410,11 +410,15 @@ if __name__ == '__main__':
     compare_contactome_with = 'all_nondauers' #all_nondauers, L1-L3
     normalize_by = 'entire_dataset' #input, output, entire_dataset
     synapse_type = 'count' #count, size
-    nondauers = './input/nondauer_synapse_size.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
+    nondauers = f'./input/nondauer_synapse_{synapse_type}.json' #nondauer_synapse_size.json, nondauer_synapse_count.json
     
     daf2_dauer = './input/daf2-dauer.json'
     stig2 = './input/stigloher2.json'
     stig3 = './input/stigloher3.json'
+
+    input_path = './output/input_percentages.json'
+    output_path = './output/output_percentages.json'
+    total_path = './output/total_percentages.json'
 
 
     nondauer_renamed = rename_nondauers(nondauers.strip())
@@ -427,14 +431,14 @@ if __name__ == '__main__':
     class_connections, connections_list = get_connections(nondauer_and_dauer, connection_type = connection_type)
 
     #normalize against whole dataset
-    get_entire_dataset_percentages(class_connections, connections_list, synapse_type = synapse_type)
+    get_entire_dataset_percentages(class_connections, connections_list, total_path, synapse_type = synapse_type)
 
     #normalize by input and outputs
     inputs = get_inputs(class_connections)
     outputs = get_outputs(class_connections)
 
-    input_percentages = get_connection_input_percentages(inputs, connections_list, synapse_type = synapse_type)
-    output_percentages = get_connection_output_percentages(outputs, connections_list, synapse_type = synapse_type)
+    input_percentages = get_connection_input_percentages(inputs, connections_list, input_path, synapse_type = synapse_type)
+    output_percentages = get_connection_output_percentages(outputs, connections_list, output_path, synapse_type = synapse_type)
 
     #normalize across whole datasets
 
